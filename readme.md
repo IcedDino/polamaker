@@ -8,7 +8,7 @@ A print-ready polaroid layout generator. Upload your photos, choose a canvas and
 |---|---|
 | Frontend | Vanilla HTML/CSS/JS — single file |
 | Backend | Python · FastAPI · Pillow |
-| Frontend hosting | Cloudflare Workers |
+| Frontend hosting | Cloudflare Pages |
 | Backend hosting | Railway |
 
 ## Monorepo structure

@@ -172,6 +172,11 @@ def create_polaroid_layout(
     return canvas
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.post("/generate")
 async def generate_polaroid(
     config: str = Form(...),

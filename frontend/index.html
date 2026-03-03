@@ -1383,9 +1383,7 @@
 </div>
 
 <script>
-  const API_URL = "%%API_URL%%".startsWith("%%")
-    ? "http://localhost:8000"
-    : "%%API_URL%%";
+  const API_URL = "https://api.polamaker.floresr.com";
   
   const S = { paper:'a4', orient:'portrait', pol:'tall', addNumbers:false, files:[] };
   let cur = 0;
@@ -1491,7 +1489,7 @@
     form.append('config', JSON.stringify(config));
     S.files.forEach(f => form.append('images', f));
     try {
-      const res = await fetch('/api/generate', { method:'POST', body:form });
+      const res = await fetch(`${API_URL}/api/generate`, { method:'POST', body:form });
       if (!res.ok) { const e = await res.json().catch(()=>({error:'Server error'})); alert('Error: '+e.error); goTo(5); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

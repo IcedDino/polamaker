@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polamaker — Polaroid Layout Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --white: #ffffff;
+      --off: #f8f8f6;
+      --ink: #111110;
+      --ink-mid: #555552;
+      --ink-faint: #aaa9a2;
+      --rule: #e2e2dc;
+      --yellow: #FFD700;
+      --yellow-dark: #e6b800;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--white);
+      color: var(--ink);
+    }
+
+    /* ══ VIEWPORT PAGER ══ */
+    #pager {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--white);
+      transform: translateX(100%);
+      transition: transform 0.55s cubic-bezier(0.77,0,0.18,1);
+      will-change: transform;
+    }
+    .page.prev { transform: translateX(-100%); }
+    .page.active { transform: translateX(0); }
+
+    /* ══ PROGRESS BAR (top) ══ */
+    .progress-bar {
+      height: 4px;
+      background: var(--rule);
+      flex-shrink: 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--yellow);
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ══ NAV STRIP ══ */
+    .nav-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 48px;
+      border-bottom: 1px solid var(--rule);
+      flex-shrink: 0;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+    .nav-logo em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--ink-mid);
+    }
+    .nav-steps {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+    }
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--rule);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .nav-dot.done { background: var(--ink); }
+    .nav-dot.active { background: var(--yellow); transform: scale(1.4); }
+    .nav-back {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 0;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-back:hover { color: var(--ink); }
+    .nav-back[hidden] { visibility: hidden; pointer-events: none; }
+
+    /* ══ PAGE CONTENT ══ */
+    .page-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 38px 48px 24px;
+      overflow-y: auto;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ══ STEP INTRO ══ */
+    .step-eyebrow {
+      font-size: 0.77rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 12px;
+    }
+    .step-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 4.8vw, 4.3rem);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+    .step-headline em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--ink-mid);
+    }
+    .step-desc {
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: var(--ink-mid);
+      max-width: 560px;
+      margin-bottom: 34px;
+    }
+
+    /* ══ CHOICE CARDS ══ */
+    .choice-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 29px;
+    }
+
+    .card {
+      border: 1.5px solid var(--rule);
+      background: var(--white);
+      padding: 22px 22px 19px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 120px;
+      max-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 17px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      user-select: none;
+      position: relative;
+    }
+    .card:hover {
+      border-color: var(--ink);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+    }
+    .card.selected {
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+    .card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      font-size: 0.7rem;
+      background: var(--yellow);
+      color: var(--ink);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .card-icon {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 46px;
+    }
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.44rem;
+      font-weight: 700;
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+    .card.selected .card-name { color: var(--white); }
+    .card-sub {
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      color: var(--ink-faint);
+      line-height: 1.8;
+      transition: color 0.2s;
+    }
+    .card.selected .card-sub { color: rgba(255,255,255,0.45); }
+
+    /* Paper rectangles */
+    .p-rect {
+      border: 2px solid var(--ink);
+      background: transparent;
+      transition: border-color 0.2s;
+    }
+    .p-rect.filled { background: var(--ink); }
+    .card.selected .p-rect { border-color: var(--white); }
+    .card.selected .p-rect.filled { background: var(--white); }
+
+    /* Polaroid icons */
+    .pol-frame {
+      display: flex;
+      flex-direction: column;
+      background: var(--ink);
+      padding: 3px 3px 0;
+      transition: background 0.2s;
+    }
+    .pol-photo { background: #ddd; transition: background 0.2s; }
+    .pol-footer { background: var(--ink); transition: background 0.2s; }
+    .card.selected .pol-frame { background: var(--white); }
+    .card.selected .pol-photo { background: rgba(255,255,255,0.2); }
+    .card.selected .pol-footer { background: var(--white); }
+
+    /* ══ ORIENT CARDS ══ */
+    .orient-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 29px;
+    }
+    .orient-card {
+      border: 1.5px solid var(--rule);
+      background: var(--white);
+      padding: 14px 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.2s;
+      user-select: none;
+      position: relative;
+    }
+    .orient-card:hover { border-color: var(--ink); }
+    .orient-card.selected { border-color: var(--ink); background: var(--ink); }
+    .orient-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 0.65rem;
+      background: var(--yellow);
+      color: var(--ink);
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .orient-box {
+      border: 2px solid var(--ink);
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .orient-card.selected .orient-box { border-color: var(--white); }
+    .orient-card.selected .card-name { color: var(--white); }
+    .orient-card.selected .card-sub { color: rgba(255,255,255,0.45); }
+
+    /* Custom row */
+    .custom-row {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 16px 20px;
+      border: 1px solid var(--rule);
+      background: var(--off);
+    }
+    .custom-row.visible { display: flex; }
+    .custom-row label {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .custom-row input {
+      width: 80px;
+      border: 1px solid var(--rule);
+      background: var(--white);
+      padding: 9px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.98rem;
+      color: var(--ink);
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .custom-row input:focus { border-color: var(--ink); }
+
+    /* ══ SECTION DIVIDER ══ */
+    .sub-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .sub-divider::before, .sub-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+    }
+    .sub-divider span {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    /* ══ UPLOAD ══ */
+    .upload-zone {
+      border: 1.5px dashed var(--rule);
+      background: var(--off);
+      padding: 38px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .upload-zone:hover, .upload-zone.over {
+      border-color: var(--ink);
+      background: var(--white);
+    }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-glyph {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      color: var(--rule);
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+    .upload-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.26rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .upload-sub {
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      color: var(--ink-faint);
+    }
+    .photo-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .photo-thumb {
+      width: 72px;
+      height: 72px;
+      border: 1px solid var(--rule);
+      position: relative;
+      overflow: hidden;
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumb .rm {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      opacity: 0;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .photo-thumb:hover .rm { opacity: 1; }
+
+    /* ══ EXTRAS ══ */
+    .extras-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+    .extra-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      cursor: pointer;
+      user-select: none;
+      padding: 16px 20px;
+      border: 1.5px solid var(--rule);
+      transition: border-color 0.2s;
+    }
+    .extra-row:hover { border-color: var(--ink); }
+    .extra-box {
+      width: 22px; height: 22px;
+      border: 1.5px solid var(--rule);
+      background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .extra-box.on { background: var(--yellow); border-color: var(--yellow-dark); }
+    .extra-box.on::after {
+      content: '';
+      width: 10px; height: 6px;
+      border-left: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      transform: rotate(-45deg) translateY(-1px);
+      display: block;
+    }
+    .extra-label { font-size: 0.9rem; color: var(--ink); }
+    .extra-desc { font-size: 0.72rem; letter-spacing: 0.03em; color: var(--ink-faint); margin-top: 3px; }
+
+    /* ══ CONTINUE BUTTON ══ */
+    .page-footer-wrap {
+      flex-shrink: 0;
+      border-top: 1px solid var(--rule);
+      background: var(--white);
+    }
+    .page-footer {
+      padding: 22px 48px 34px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .btn-continue {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--yellow);
+      color: var(--ink);
+      border: none;
+      padding: 16px 38px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-continue:hover { background: var(--yellow-dark); transform: translateY(-2px); }
+    .btn-continue:active { transform: translateY(0); }
+    .btn-continue::after { content: '→'; font-size: 1.1rem; }
+    .btn-skip {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+    }
+    .btn-skip:hover { color: var(--ink); }
+    .btn-back-footer {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: none;
+      border: 1.5px solid var(--rule);
+      padding: 16px 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-back-footer::before { content: '←'; font-size: 1rem; }
+    .btn-back-footer:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* ══ SUMMARY PAGE ══ */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+      margin-bottom: 28px;
+      background: var(--rule);
+      border: 2px solid var(--rule);
+    }
+    .sum-cell {
+      background: var(--white);
+      padding: 24px 28px;
+    }
+    .sum-key {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 8px;
+    }
+    .sum-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .btn-generate {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      padding: 18px 52px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-generate:hover { background: #333; transform: translateY(-2px); }
+    .btn-generate::after { content: '→'; font-size: 1.1rem; }
+
+    /* ══ SPINNER PAGE ══ */
+    .spinner-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+    }
+    .spinner-ring {
+      width: 64px;
+      height: 64px;
+      border: 3px solid var(--rule);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-text {
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+    }
+    .spinner-track {
+      width: 240px;
+      height: 2px;
+      background: var(--rule);
+      position: relative;
+      overflow: hidden;
+    }
+    .spinner-fill {
+      position: absolute;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: var(--yellow);
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide { to { left: 140%; } }
+
+    /* ══ RESULT PAGE ══ */
+    .result-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--rule);
+      flex-shrink: 0;
+    }
+    .result-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.44rem;
+      font-weight: 700;
+    }
+    .result-actions { display: flex; gap: 12px; align-items: center; }
+    .btn-restart {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+    }
+    .btn-restart:hover { color: var(--ink); }
+    .btn-dl {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      background: var(--yellow);
+      color: var(--ink);
+      border: none;
+      padding: 10px 22px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn-dl:hover { background: var(--yellow-dark); }
+    .result-body { flex: 1; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px 48px; }
+    .result-body img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 32px 100px rgba(0,0,0,0.14); }
+
+    /* ══ PAGE 0 — COVER ══ */
+    .cover-page {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      overflow: hidden;
+    }
+
+    /* LEFT COLUMN */
+    .cover-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 53px 52px;
+      position: relative;
+      z-index: 2;
+    }
+    .cover-eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 24px;
+    }
+    .cover-h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.4rem, 7.2vw, 6rem);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      margin-bottom: 24px;
+    }
+    .cover-sub {
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: var(--ink-mid);
+      max-width: 360px;
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+
+    /* STEPS LIST */
+    .cover-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 43px;
+      border-top: 1px solid var(--rule);
+    }
+    .cover-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .cover-step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--yellow-dark);
+      width: 20px;
+      flex-shrink: 0;
+    }
+    .cover-step-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .cover-step-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+    }
+    .cover-step-desc {
+      margin-left: auto;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+    }
+
+    /* RIGHT COLUMN — visual stage */
+    .cover-right {
+      position: relative;
+      background: var(--off);
+      border-left: 1px solid var(--rule);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cover-right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, var(--rule) 39px, var(--rule) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, var(--rule) 39px, var(--rule) 40px);
+      opacity: 0.5;
+    }
+
+    /* Polaroid stack illustration */
+    .pol-stack {
+      position: relative;
+      width: 280px;
+      height: 340px;
+    }
+    .pol-card {
+      position: absolute;
+      background: var(--white);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+    }
+    .pol-card-photo {
+      flex: 1;
+      margin: 14px 14px 0;
+    }
+    .pol-card-foot {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pol-card-line {
+      width: 80px;
+      height: 2px;
+      background: var(--rule);
+    }
+
+    /* card 1 — back left */
+    .pol-c1 {
+      width: 210px; height: 258px;
+      top: 60px; left: -14px;
+      transform: rotate(-8deg);
+      z-index: 1;
+    }
+    .pol-c1 .pol-card-photo { background: #d8d4cc; }
+
+    /* card 2 — back right */
+    .pol-c2 {
+      width: 210px; height: 258px;
+      top: 30px; left: 76px;
+      transform: rotate(5deg);
+      z-index: 2;
+    }
+    .pol-c2 .pol-card-photo { background: #c8ccd4; }
+
+    /* card 3 — front center */
+    .pol-c3 {
+      width: 226px; height: 278px;
+      top: 16px; left: 24px;
+      transform: rotate(-1.5deg);
+      z-index: 3;
+    }
+    .pol-c3 .pol-card-photo {
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+    .pol-c3 .pol-card-photo::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(245,224,55,0.18), transparent);
+    }
+    /* little photo scene inside front card */
+    .pol-scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pol-scene-circle {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: rgba(255,215,0,0.25);
+      position: absolute;
+      top: 28px; left: 28px;
+    }
+    .pol-scene-rect {
+      width: 90px; height: 46px;
+      background: rgba(255,255,255,0.07);
+      position: absolute;
+      bottom: 20px; right: 16px;
+      transform: rotate(5deg);
+    }
+    .pol-scene-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--yellow);
+      position: absolute;
+      top: 18px; right: 24px;
+    }
+
+    /* Output badge */
+    .cover-badge {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      z-index: 10;
+    }
+    .cover-badge-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+    .cover-badge-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .cover-badge-sep {
+      width: 32px;
+      height: 2px;
+      background: var(--yellow);
+      margin: 6px 0;
+    }
+
+    /* paper formats illustration */
+    .cover-formats {
+      position: absolute;
+      top: 32px;
+      right: 32px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      z-index: 10;
+    }
+    .fmt-sheet {
+      border: 1.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      background: var(--white);
+      text-transform: uppercase;
+    }
+
+    .cover-stat-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+    .cover-stat-val span { color: var(--yellow-dark); }
+    .cover-stat-key {
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-top: 2px;
+    }
+    .cover-stats {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 64px;
+      padding-top: 28px;
+      border-top: 1px solid var(--rule);
+      width: 100%;
+    }
+    .btn-start {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.98rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      padding: 18px 48px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 17px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-start:hover { background: #333; transform: translateY(-2px); }
+    .btn-start::after { content: '→'; font-size: 1.1rem; }
+
+    /* entrance animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .page.active .cover-h1 { animation: fadeUp 0.55s 0.05s both; }
+    .page.active .cover-sub { animation: fadeUp 0.5s 0.2s both; }
+    .page.active .cover-steps { animation: fadeUp 0.5s 0.28s both; }
+    .page.active .btn-start { animation: fadeUp 0.5s 0.38s both; }
+    .page.active .pol-stack { animation: fadeUp 0.6s 0.15s both; }
+    .page.active .cover-badge { animation: fadeUp 0.5s 0.35s both; }
+    .page.active .cover-formats { animation: fadeUp 0.4s 0.1s both; }
+    .page.active .step-eyebrow { animation: fadeUp 0.4s 0.05s both; }
+    .page.active .step-headline { animation: fadeUp 0.45s 0.1s both; }
+    .page.active .step-desc { animation: fadeUp 0.4s 0.18s both; }
+    .page.active .choice-row { animation: fadeUp 0.4s 0.24s both; }
+    .page.active .orient-row { animation: fadeUp 0.4s 0.28s both; }
+    .page.active .sub-divider { animation: fadeUp 0.4s 0.22s both; }
+    .page.active .upload-zone { animation: fadeUp 0.4s 0.2s both; }
+    .page.active .extras-list { animation: fadeUp 0.4s 0.2s both; }
+    .page.active .summary-grid { animation: fadeUp 0.45s 0.12s both; }
+
+    @media (max-width: 600px) {
+      .nav-strip, .page-content, .page-footer { padding-left: 24px; padding-right: 24px; }
+      .cover-page { grid-template-columns: 1fr; }
+      .cover-right { display: none; }
+      .cover-left { padding: 40px 24px; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="pager">
+
+  <!-- ══ PAGE 0: COVER ══ -->
+  <div class="page active" id="page-0">
+    <div class="cover-page">
+
+      <!-- LEFT: copy + steps -->
+      <div class="cover-left">
+        <div class="cover-eyebrow">Polaroid Layout Studio</div>
+        <div class="cover-h1">Pola<em style="font-style:italic;font-weight:400">maker</em></div>
+        <p class="cover-sub">Turn your photographs into a print-ready polaroid layout in four steps — choose your canvas, pick a frame size, drop in your photos, and download at 300 DPI.</p>
+
+        <div class="cover-steps">
+          <!-- Step 1 -->
+          <div class="cover-step">
+            <span class="cover-step-num">01</span>
+            <div class="cover-step-icon">
+              <!-- paper icon -->
+              <svg width="22" height="28" viewBox="0 0 22 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="20" height="26" rx="1" stroke="#111110" stroke-width="1.5"/>
+                <line x1="5" y1="9" x2="17" y2="9" stroke="#aaa9a2" stroke-width="1.2"/>
+                <line x1="5" y1="13" x2="17" y2="13" stroke="#aaa9a2" stroke-width="1.2"/>
+                <line x1="5" y1="17" x2="12" y2="17" stroke="#aaa9a2" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <span class="cover-step-label">Choose your canvas</span>
+            <span class="cover-step-desc">A4 · Letter · Custom</span>
+          </div>
+          <!-- Step 2 -->
+          <div class="cover-step">
+            <span class="cover-step-num">02</span>
+            <div class="cover-step-icon">
+              <!-- polaroid icon -->
+              <svg width="22" height="26" viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="20" height="24" rx="1" stroke="#111110" stroke-width="1.5"/>
+                <rect x="3.5" y="3.5" width="15" height="13" fill="#e2e2dc"/>
+                <line x1="5" y1="21" x2="17" y2="21" stroke="#aaa9a2" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <span class="cover-step-label">Pick a polaroid size</span>
+            <span class="cover-step-desc">Tall · Venti · Grande</span>
+          </div>
+          <!-- Step 3 -->
+          <div class="cover-step">
+            <span class="cover-step-num">03</span>
+            <div class="cover-step-icon">
+              <!-- photo/image icon -->
+              <svg width="26" height="22" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="24" height="20" rx="1" stroke="#111110" stroke-width="1.5"/>
+                <circle cx="8" cy="8" r="3" stroke="#aaa9a2" stroke-width="1.2"/>
+                <path d="M1 15 L7 10 L13 15 L18 10 L25 17" stroke="#111110" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="cover-step-label">Add your photographs</span>
+            <span class="cover-step-desc">Up to 9 images</span>
+          </div>
+          <!-- Step 4 -->
+          <div class="cover-step">
+            <span class="cover-step-num">04</span>
+            <div class="cover-step-icon">
+              <!-- download icon -->
+              <svg width="22" height="26" viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 3 L11 17" stroke="#111110" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M5 12 L11 18 L17 12" stroke="#111110" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M1 22 L1 25 L21 25 L21 22" stroke="#111110" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="cover-step-label">Download at 300 DPI</span>
+            <span class="cover-step-desc">PNG · Print-ready</span>
+          </div>
+        </div>
+
+        <button class="btn-start" onclick="goTo(1)">Begin</button>
+      </div>
+
+      <!-- RIGHT: visual stage -->
+      <div class="cover-right">
+
+        <!-- paper format chips top-right -->
+        <div class="cover-formats">
+          <div class="fmt-sheet" style="width:30px;height:42px;">A4</div>
+          <div class="fmt-sheet" style="width:32px;height:41px;">LTR</div>
+          <div class="fmt-sheet" style="width:28px;height:36px;border-style:dashed">…</div>
+        </div>
+
+        <!-- polaroid stack centre -->
+        <div class="pol-stack">
+          <div class="pol-card pol-c1">
+            <div class="pol-card-photo"></div>
+            <div class="pol-card-foot"><div class="pol-card-line"></div></div>
+          </div>
+          <div class="pol-card pol-c2">
+            <div class="pol-card-photo"></div>
+            <div class="pol-card-foot"><div class="pol-card-line"></div></div>
+          </div>
+          <div class="pol-card pol-c3">
+            <div class="pol-card-photo">
+              <div class="pol-scene">
+                <div class="pol-scene-circle"></div>
+                <div class="pol-scene-rect"></div>
+                <div class="pol-scene-dot"></div>
+              </div>
+            </div>
+            <div class="pol-card-foot"><div class="pol-card-line"></div></div>
+          </div>
+        </div>
+
+        <!-- stats badge bottom-right -->
+        <div class="cover-badge">
+          <div class="cover-badge-val">300</div>
+          <div class="cover-badge-label">DPI output</div>
+          <div class="cover-badge-sep"></div>
+          <div class="cover-badge-val">9<span style="font-size:1.4rem;color:var(--ink-faint)">×</span></div>
+          <div class="cover-badge-label">Max photos</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 1: CANVAS ══ -->
+  <div class="page" id="page-1">
+    <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot active" id="dot-1b"></div>
+        <div class="nav-dot" id="dot-2b"></div>
+        <div class="nav-dot" id="dot-3b"></div>
+        <div class="nav-dot" id="dot-4b"></div>
+      </div>
+      
+    </div>
+    <div class="page-content">
+      <div class="step-eyebrow">Step 01 of 04 · Canvas</div>
+      <h2 class="step-headline">Choose your<br><em>canvas.</em></h2>
+      <p class="step-desc">The sheet that holds your memories. Standard sizes print on any home printer or at a copy shop.</p>
+
+      <div class="choice-row" id="paperGrid">
+        <div class="card selected" data-v="a4" onclick="pick('paper','a4')">
+          <div class="card-icon">
+            <div class="p-rect" style="width:26px;height:36px"></div>
+            <div class="p-rect filled" style="width:26px;height:36px"></div>
+          </div>
+          <div>
+            <div class="card-name">A4</div>
+            <div class="card-sub">210 × 297 mm<br>International standard</div>
+          </div>
+        </div>
+        <div class="card" data-v="letter" onclick="pick('paper','letter')">
+          <div class="card-icon">
+            <div class="p-rect" style="width:27px;height:35px"></div>
+            <div class="p-rect filled" style="width:27px;height:35px"></div>
+          </div>
+          <div>
+            <div class="card-name">Letter</div>
+            <div class="card-sub">8.5 × 11 in<br>North America</div>
+          </div>
+        </div>
+        <div class="card" data-v="custom" onclick="pick('paper','custom')">
+          <div class="card-icon">
+            <div class="p-rect" style="width:24px;height:30px"></div>
+            <div class="p-rect filled" style="width:24px;height:30px"></div>
+          </div>
+          <div>
+            <div class="card-name">Custom</div>
+            <div class="card-sub">Any size<br>in inches</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-row" id="customRow">
+        <label>Width</label>
+        <input type="number" id="customW" value="8.5" step="0.1" min="1" max="40" />
+        <label>Height</label>
+        <input type="number" id="customH" value="11" step="0.1" min="1" max="40" />
+        <label>in</label>
+      </div>
+
+      <div class="sub-divider"><span>Orientation</span></div>
+
+      <div class="orient-row">
+        <div class="orient-card selected" data-o="portrait" onclick="pick('orient','portrait')">
+          <div class="orient-box" style="width:22px;height:30px"></div>
+          <div>
+            <div class="card-name" style="font-size:1.1rem">Portrait</div>
+            <div class="card-sub">Tall</div>
+          </div>
+        </div>
+        <div class="orient-card" data-o="landscape" onclick="pick('orient','landscape')">
+          <div class="orient-box" style="width:30px;height:22px"></div>
+          <div>
+            <div class="card-name" style="font-size:1.1rem">Landscape</div>
+            <div class="card-sub">Wide</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer-wrap"><div class="page-footer">
+      <button class="btn-back-footer" onclick="goTo(0)">Back</button>
+      <button class="btn-continue" onclick="advance(1)">Continue</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2: POLAROID ══ -->
+  <div class="page" id="page-2">
+    <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot done"></div>
+        <div class="nav-dot active"></div>
+        <div class="nav-dot"></div>
+        <div class="nav-dot"></div>
+      </div>
+      
+    </div>
+    <div class="page-content">
+      <div class="step-eyebrow">Step 02 of 04 · The Frame</div>
+      <h2 class="step-headline">Choose your<br><em>polaroid.</em></h2>
+      <p class="step-desc">Each size carries a different weight. Tall is intimate and classic. Venti is square and contemporary. Grande is panoramic, almost cinematic.</p>
+
+      <div class="choice-row" id="polGrid">
+        <div class="card selected" data-v="tall" onclick="pick('pol','tall')">
+          <div class="card-icon" style="align-items:center">
+            <div class="pol-frame" style="width:40px">
+              <div class="pol-photo" style="height:34px;width:34px;margin:0 auto"></div>
+              <div class="pol-footer" style="height:16px;width:100%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card-name">Tall</div>
+            <div class="card-sub">54 × 70 mm<br>Classic portrait</div>
+          </div>
+        </div>
+        <div class="card" data-v="venti" onclick="pick('pol','venti')">
+          <div class="card-icon" style="align-items:center">
+            <div class="pol-frame" style="width:40px">
+              <div class="pol-photo" style="height:34px;width:34px;margin:0 auto"></div>
+              <div class="pol-footer" style="height:10px;width:100%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card-name">Venti</div>
+            <div class="card-sub">54 × 62 mm<br>Square format</div>
+          </div>
+        </div>
+        <div class="card" data-v="grande" onclick="pick('pol','grande')">
+          <div class="card-icon" style="align-items:center">
+            <div class="pol-frame" style="width:54px">
+              <div class="pol-photo" style="height:28px;width:48px;margin:0 auto"></div>
+              <div class="pol-footer" style="height:9px;width:100%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card-name">Grande</div>
+            <div class="card-sub">70 × 62 mm<br>Wide landscape</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer-wrap"><div class="page-footer">
+      <button class="btn-back-footer" onclick="goTo(1)">Back</button>
+      <button class="btn-continue" onclick="advance(2)">Continue</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3: PHOTOS ══ -->
+  <div class="page" id="page-3">
+    <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot active"></div>
+        <div class="nav-dot"></div>
+      </div>
+      
+    </div>
+    <div class="page-content">
+      <div class="step-eyebrow">Step 03 of 04 · Your Images</div>
+      <h2 class="step-headline">Add your<br><em>photographs.</em></h2>
+      <p class="step-desc">Up to nine photographs, placed in sequence. Leave empty to generate a template with placeholder frames.</p>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" multiple />
+        <div class="upload-glyph">◻</div>
+        <div class="upload-title">Drop photographs here</div>
+        <div class="upload-sub" id="uploadSub">or click to browse · JPG, PNG, WEBP</div>
+      </div>
+      <div class="photo-strip" id="photoStrip"></div>
+    </div>
+    <div class="page-footer-wrap"><div class="page-footer">
+      <button class="btn-back-footer" onclick="goTo(2)">Back</button>
+      <button class="btn-continue" onclick="advance(3)">Continue</button>
+      <button class="btn-skip" onclick="advance(3)">Skip — use placeholders</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 4: OPTIONS ══ -->
+  <div class="page" id="page-4">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot active"></div>
+      </div>
+      
+    </div>
+    <div class="page-content">
+      <div class="step-eyebrow">Step 04 of 04 · Final Touches</div>
+      <h2 class="step-headline">Options &amp;<br><em>details.</em></h2>
+      <p class="step-desc">Small decisions that make a big difference.</p>
+
+      <div class="extras-list">
+        <div class="extra-row" onclick="toggleOpt('addNumbers')">
+          <div class="extra-box" id="box-addNumbers"></div>
+          <div>
+            <div class="extra-label">Number each polaroid</div>
+            <div class="extra-desc">Adds a small sequential number below each frame</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer-wrap"><div class="page-footer">
+      <button class="btn-back-footer" onclick="goTo(3)">Back</button>
+      <button class="btn-continue" onclick="showSummary()" style="background:var(--ink);color:var(--white)">Review &amp; Generate</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 5: SUMMARY ══ -->
+  <div class="page" id="page-5">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+      </div>
+      
+    </div>
+    <div class="page-content">
+      <div class="step-eyebrow">Review · Ready to print</div>
+      <h2 class="step-headline">Ready to<br><em>print.</em></h2>
+      <p class="step-desc">Review your selections, then compose the layout.</p>
+
+      <div class="summary-grid">
+        <div class="sum-cell">
+          <div class="sum-key">Paper</div>
+          <div class="sum-val" id="sumPaper">—</div>
+        </div>
+        <div class="sum-cell">
+          <div class="sum-key">Orientation</div>
+          <div class="sum-val" id="sumOrient">—</div>
+        </div>
+        <div class="sum-cell">
+          <div class="sum-key">Polaroid size</div>
+          <div class="sum-val" id="sumPol">—</div>
+        </div>
+        <div class="sum-cell">
+          <div class="sum-key">Photos</div>
+          <div class="sum-val" id="sumPhotos">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer-wrap"><div class="page-footer">
+      <button class="btn-back-footer" onclick="goTo(4)">Back</button>
+      <button class="btn-generate" onclick="generate()">Compose layout</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 6: SPINNER ══ -->
+  <div class="page" id="page-6">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="nav-strip">
+      <div class="nav-logo">Pola<em>maker</em></div>
+      <div class="nav-steps">
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+        <div class="nav-dot done"></div>
+      </div>
+      
+    </div>
+    <div class="spinner-wrap">
+      <div class="spinner-ring"></div>
+      <div class="spinner-track"><div class="spinner-fill"></div></div>
+      <div class="spinner-text">Composing your layout at 300 DPI…</div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 7: RESULT ══ -->
+  <div class="page" id="page-7">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--yellow)"></div></div>
+    <div class="result-topbar">
+      <div class="result-title">Your polaroid layout</div>
+      <div class="result-actions">
+        <button class="btn-restart" onclick="location.reload()">Start over</button>
+        <a id="dlLink" download="polamaker_layout.png">
+          <button class="btn-dl">↓ Download PNG</button>
+        </a>
+      </div>
+    </div>
+    <div class="result-body">
+      <img id="resultImg" alt="Your polaroid layout" />
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const S = { paper:'a4', orient:'portrait', pol:'tall', addNumbers:false, files:[] };
+  let cur = 0;
+
+  function goTo(n) {
+    const from = document.getElementById(`page-${cur}`);
+    const to = document.getElementById(`page-${n}`);
+    if (!to) return;
+    from.classList.remove('active');
+    from.classList.add(n > cur ? 'prev' : '');
+    if (n < cur) from.classList.remove('prev');
+    // all pages reset
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active','prev');
+    });
+    // set correct classes
+    for (let i = 0; i < n; i++) {
+      document.getElementById(`page-${i}`).classList.add('prev');
+    }
+    to.classList.add('active');
+    cur = n;
+  }
+
+  function advance(step) {
+    goTo(step + 1);
+  }
+
+  function pick(type, val) {
+    if (type === 'paper') {
+      S.paper = val;
+      document.querySelectorAll('#paperGrid .card').forEach(c => c.classList.toggle('selected', c.dataset.v === val));
+      document.getElementById('customRow').classList.toggle('visible', val === 'custom');
+    }
+    if (type === 'orient') {
+      S.orient = val;
+      document.querySelectorAll('.orient-card').forEach(c => c.classList.toggle('selected', c.dataset.o === val));
+    }
+    if (type === 'pol') {
+      S.pol = val;
+      document.querySelectorAll('#polGrid .card').forEach(c => c.classList.toggle('selected', c.dataset.v === val));
+    }
+  }
+
+  function toggleOpt(key) {
+    S[key] = !S[key];
+    document.getElementById(`box-${key}`).classList.toggle('on', S[key]);
+  }
+
+  // Upload
+  const zone = document.getElementById('uploadZone');
+  const fin = document.getElementById('fileInput');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); addFiles([...e.dataTransfer.files]); });
+  fin.addEventListener('change', () => { addFiles([...fin.files]); fin.value = ''; });
+
+  function addFiles(files) {
+    files.filter(f => f.type.startsWith('image/')).forEach(f => {
+      if (S.files.length >= 9) return;
+      S.files.push(f);
+      const el = document.createElement('div');
+      el.className = 'photo-thumb';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      const rm = document.createElement('div');
+      rm.className = 'rm';
+      rm.textContent = 'Remove';
+      rm.onclick = () => { S.files.splice(S.files.indexOf(f), 1); el.remove(); updSub(); };
+      el.append(img, rm);
+      document.getElementById('photoStrip').appendChild(el);
+    });
+    updSub();
+  }
+  function updSub() {
+    const n = S.files.length;
+    document.getElementById('uploadSub').textContent = n > 0
+      ? `${n} of 9 photos · click to add more`
+      : 'or click to browse · JPG, PNG, WEBP';
+  }
+
+  function showSummary() {
+    const pl = { a4:'A4', letter:'Letter', custom:'Custom' };
+    const pp = { tall:'Tall', venti:'Venti', grande:'Grande' };
+    const oo = { portrait:'Portrait', landscape:'Landscape' };
+    document.getElementById('sumPaper').textContent = pl[S.paper];
+    document.getElementById('sumOrient').textContent = oo[S.orient];
+    document.getElementById('sumPol').textContent = pp[S.pol];
+    document.getElementById('sumPhotos').textContent = S.files.length > 0 ? `${S.files.length} photo${S.files.length > 1?'s':''}` : 'Placeholders';
+    goTo(5);
+  }
+
+  async function generate() {
+    goTo(6);
+    const config = {
+      paper: S.paper,
+      orientation: S.orient,
+      polaroid: S.pol,
+      custom_w: parseFloat(document.getElementById('customW')?.value) || 8.5,
+      custom_h: parseFloat(document.getElementById('customH')?.value) || 11.0,
+      add_numbers: S.addNumbers
+    };
+    const form = new FormData();
+    form.append('config', JSON.stringify(config));
+    S.files.forEach(f => form.append('images', f));
+    try {
+      const res = await fetch('/api/generate', { method:'POST', body:form });
+      if (!res.ok) { const e = await res.json().catch(()=>({error:'Server error'})); alert('Error: '+e.error); goTo(5); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      document.getElementById('resultImg').src = url;
+      document.getElementById('dlLink').href = url;
+      goTo(7);
+    } catch(e) {
+      alert('Could not connect. Is Polamaker running on localhost:3000?');
+      goTo(5);
+    }
+  }
+</script>
+</body>
+</html>

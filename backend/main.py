@@ -3,9 +3,16 @@ from fastapi.responses import StreamingResponse
 from PIL import Image, ImageDraw, ImageFont
 from typing import List
 import io
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://polamaker.floresr.com"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def create_polaroid_layout(images=None, add_numbers=False, add_photo_frames=False):
     DPI = 300

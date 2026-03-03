@@ -1489,7 +1489,7 @@
     form.append('config', JSON.stringify(config));
     S.files.forEach(f => form.append('images', f));
     try {
-      const res = await fetch(`${API_URL}/api/generate`, { method:'POST', body:form });
+      const res = await fetch(`${API_URL}/generate`, { method:'POST', body:form });
       if (!res.ok) { const e = await res.json().catch(()=>({error:'Server error'})); alert('Error: '+e.error); goTo(5); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

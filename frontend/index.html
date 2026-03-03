@@ -1400,8 +1400,9 @@
       p.classList.remove('active','prev');
     });
     // set correct classes
-    for (let i = 0; i < n; i++) {
-      document.getElementById(`page-${i}`).classList.add('prev');
+    for (let i = 1; i < n; i++) {
+      const p = document.getElementById(`page-${i}`);
+      if (p) p.classList.add('prev');
     }
     to.classList.add('active');
     cur = n;
@@ -1489,7 +1490,18 @@
     form.append('config', JSON.stringify(config));
     S.files.forEach(f => form.append('images', f));
     try {
-      const res = await fetch(`${API_URL}/generate`, { method:'POST', body:form });
+      // Wake up Railway if it's sleeping (fire-and-forget, ignore errors)
+      fetch(`${API_URL}/health`).catch(() => {});
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+
+      let res;
+      try {
+        res = await fetch(`${API_URL}/generate`, { method:'POST', body:form, signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (!res.ok) {
         let msg = `Server error (${res.status})`;
@@ -1501,7 +1513,6 @@
 
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('image/')) {
-        // Response arrived but isn't an image — likely an error JSON from Railway
         let msg = 'Unexpected response from server.';
         try { const e = await res.json(); msg = e.error || e.detail || msg; } catch (_) {}
         alert('Error: ' + msg);
@@ -1522,11 +1533,11 @@
       goTo(7);
     } catch(e) {
       console.error('Generate error:', e);
-      const isTimeout = e.name === 'TypeError' && e.message.toLowerCase().includes('network');
-      alert(isTimeout
-        ? 'Could not reach the server. It may be waking up — please wait a moment and try again.'
-        : 'Unexpected error: ' + e.message
-      );
+      if (e.name === 'AbortError') {
+        alert('The request timed out (90s). Your Railway server may be starting up — please try again in a moment.');
+      } else {
+        alert('Could not reach the server. It may be waking up — please wait a moment and try again.');
+      }
       goTo(5);
     }
   }

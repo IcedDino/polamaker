@@ -1383,6 +1383,10 @@
 </div>
 
 <script>
+  const API_URL = "%%api.polamaker.floresr.com%%".startsWith("%%")
+    ? "http://localhost:8000"
+    : "%%API_URL%%";
+  
   const S = { paper:'a4', orient:'portrait', pol:'tall', addNumbers:false, files:[] };
   let cur = 0;
 

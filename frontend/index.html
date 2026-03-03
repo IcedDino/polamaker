@@ -1490,14 +1490,43 @@
     S.files.forEach(f => form.append('images', f));
     try {
       const res = await fetch(`${API_URL}/generate`, { method:'POST', body:form });
-      if (!res.ok) { const e = await res.json().catch(()=>({error:'Server error'})); alert('Error: '+e.error); goTo(5); return; }
+
+      if (!res.ok) {
+        let msg = `Server error (${res.status})`;
+        try { const e = await res.json(); msg = e.error || msg; } catch (_) {}
+        alert('Error: ' + msg);
+        goTo(5);
+        return;
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('image/')) {
+        // Response arrived but isn't an image — likely an error JSON from Railway
+        let msg = 'Unexpected response from server.';
+        try { const e = await res.json(); msg = e.error || e.detail || msg; } catch (_) {}
+        alert('Error: ' + msg);
+        goTo(5);
+        return;
+      }
+
       const blob = await res.blob();
+      if (!blob || blob.size === 0) {
+        alert('Error: Server returned an empty image. Please try again.');
+        goTo(5);
+        return;
+      }
+
       const url = URL.createObjectURL(blob);
       document.getElementById('resultImg').src = url;
       document.getElementById('dlLink').href = url;
       goTo(7);
     } catch(e) {
-      alert('Could not connect. Is Polamaker running on localhost:3000?');
+      console.error('Generate error:', e);
+      const isTimeout = e.name === 'TypeError' && e.message.toLowerCase().includes('network');
+      alert(isTimeout
+        ? 'Could not reach the server. It may be waking up — please wait a moment and try again.'
+        : 'Unexpected error: ' + e.message
+      );
       goTo(5);
     }
   }

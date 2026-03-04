@@ -31,8 +31,7 @@
     /* ══ VIEWPORT PAGER ══ */
     #pager {
       width: 100%;
-      height: 100vh;
-      height: 100dvh; /* dynamic viewport height — fixes Safari iOS toolbar */
+      height: 100%;
       position: relative;
       overflow: hidden;
     }
@@ -1049,30 +1048,52 @@
 
     @media (max-width: 640px) {
 
-      /* ── Layout shell ── */
+      /* ── Safari iOS: let the active page be the scroll container ── */
+      html, body { height: 100%; overflow: hidden; }
+
+      #pager {
+        height: 100%;
+        /* Use svh so pager always matches the smallest viewport
+           (toolbar expanded). This prevents content jumping when
+           Safari collapses its toolbar. */
+        height: 100svh;
+      }
+
+      .page {
+        /* On mobile each page scrolls itself.
+           -webkit-overflow-scrolling:touch enables momentum scroll
+           AND tells Safari this is a native scroll container,
+           which allows the toolbar to shrink as the user scrolls. */
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: none;
+        flex-direction: column;
+      }
+
+      /* ── Sticky nav with blur ── */
       .nav-strip {
         padding: 14px 20px;
         position: sticky;
         top: 0;
         z-index: 10;
-        background: var(--white);
+        /* Frosted glass — content blurs under the nav as you scroll */
+        background: rgba(255, 255, 255, 0.82);
+        -webkit-backdrop-filter: saturate(180%) blur(16px);
+        backdrop-filter: saturate(180%) blur(16px);
+        border-bottom: 1px solid rgba(226, 226, 220, 0.7);
       }
-      .page-footer { padding: 16px 20px; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
 
-      /* ── Step pages: let content + footer scroll together ── */
-      .page {
-        flex-direction: column;
-        overflow-y: auto;
-        overflow-x: hidden;
-      }
+      /* ── Page content flows naturally (no internal scroll) ── */
       .page-content {
         padding: 28px 20px 8px;
         overflow-y: visible;
         flex: none;
       }
-      .page-footer-wrap {
-        border-top: none;
-        flex-shrink: 0;
+      .page-footer-wrap { border-top: none; flex-shrink: 0; }
+      .page-footer {
+        padding: 16px 20px;
+        padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
       }
 
       /* ── Nav ── */
@@ -1143,26 +1164,46 @@
       .spinner-track { width: 160px; }
 
       /* ── Result page ── */
-      .result-topbar { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+      .result-topbar {
+        padding: 14px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(255,255,255,0.82);
+        -webkit-backdrop-filter: saturate(180%) blur(16px);
+        backdrop-filter: saturate(180%) blur(16px);
+        border-bottom: 1px solid rgba(226,226,220,0.7);
+      }
       .result-badge { display: none; }
       .result-actions { gap: 8px; }
       .btn-restart { padding: 10px 14px; font-size: 0.65rem; }
       .btn-dl { padding: 10px 18px; font-size: 0.78rem; }
-      .result-body { padding: 24px 16px; gap: 14px; }
-      .result-body img { max-height: calc(100dvh - 200px); }
+      .result-body {
+        padding: 24px 16px;
+        padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
+        gap: 14px;
+        /* Let the page scroll, not this div */
+        flex: none;
+        overflow-y: visible;
+      }
+      .result-body img { max-width: 100%; max-height: none; }
       .result-meta { flex-wrap: wrap; gap: 10px; justify-content: center; }
       .result-frame::after { transform: translate(4px, 4px); }
 
-      /* ── Cover page — full-screen, big, scroll if needed ── */
+      /* ── Cover page ── */
       .cover-page {
         grid-template-columns: 1fr;
-        overflow-y: auto;
-        height: 100%;
+        /* Cover page is inside page-0 which already scrolls.
+           Don't add another scroll layer. */
+        overflow-y: visible;
+        min-height: 100%;
       }
       .cover-right { display: none; }
       .cover-left {
         padding: 44px 24px;
-        padding-bottom: max(48px, env(safe-area-inset-bottom));
+        padding-bottom: max(48px, env(safe-area-inset-bottom, 48px));
         justify-content: flex-start;
         overflow-y: visible;
         min-height: 100%;

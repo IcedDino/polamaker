@@ -589,50 +589,133 @@
     @keyframes slide { to { left: 140%; } }
 
     /* ══ RESULT PAGE ══ */
+    #page-7 { background: var(--off); }
+
     .result-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 48px;
+      padding: 18px 48px;
       border-bottom: 1px solid var(--rule);
       flex-shrink: 0;
+      background: var(--white);
     }
-    .result-title {
+    .result-logo {
       font-family: 'Playfair Display', serif;
-      font-size: 1.44rem;
-      font-weight: 700;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
     }
-    .result-actions { display: flex; gap: 12px; align-items: center; }
+    .result-logo em { font-style: italic; font-weight: 400; color: var(--ink-mid); }
+    .result-badge {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      border: 1px solid var(--rule);
+      padding: 4px 10px;
+      margin-left: 14px;
+    }
+    .result-actions { display: flex; gap: 10px; align-items: center; }
     .btn-restart {
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       color: var(--ink-faint);
       background: none;
-      border: none;
+      border: 1.5px solid var(--rule);
+      padding: 11px 20px;
       cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      transition: color 0.2s;
+      transition: border-color 0.2s, color 0.2s;
     }
-    .btn-restart:hover { color: var(--ink); }
+    .btn-restart:hover { border-color: var(--ink); color: var(--ink); }
+
+    .btn-dl-wrap {
+      position: relative;
+      display: inline-flex;
+    }
     .btn-dl {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.9rem;
-      letter-spacing: 0.06em;
-      background: var(--yellow);
-      color: var(--ink);
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-style: italic;
+      background: var(--ink);
+      color: var(--white);
       border: none;
-      padding: 10px 22px;
+      padding: 11px 24px;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      transition: background 0.2s;
+      gap: 10px;
+      transition: background 0.2s, transform 0.15s;
+      position: relative;
+      z-index: 1;
     }
-    .btn-dl:hover { background: var(--yellow-dark); }
-    .result-body { flex: 1; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px 48px; }
-    .result-body img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 32px 100px rgba(0,0,0,0.14); }
+    .btn-dl:hover { background: #222; transform: translate(-2px, -2px); }
+    .btn-dl-shadow {
+      position: absolute;
+      inset: 0;
+      background: var(--yellow);
+      transform: translate(4px, 4px);
+      z-index: 0;
+      transition: transform 0.15s;
+    }
+    .btn-dl-wrap:hover .btn-dl-shadow { transform: translate(6px, 6px); }
+
+    .result-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      gap: 20px;
+    }
+    .result-frame {
+      position: relative;
+      display: inline-block;
+    }
+    .result-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--yellow);
+      z-index: 0;
+      transform: translate(7px, 7px);
+    }
+    .result-body img {
+      max-width: min(640px, 100%);
+      max-height: calc(100vh - 260px);
+      object-fit: contain;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .result-meta-item {
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .result-meta-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--yellow-dark);
+      display: inline-block;
+    }
 
     /* ══ PAGE 0 — COVER ══ */
     .cover-page {
@@ -1367,16 +1450,29 @@
   <div class="page" id="page-7">
     <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--yellow)"></div></div>
     <div class="result-topbar">
-      <div class="result-title">Your polaroid layout</div>
+      <div style="display:flex;align-items:center;gap:0">
+        <div class="result-logo">Pola<em>maker</em></div>
+        <span class="result-badge">Ready to print</span>
+      </div>
       <div class="result-actions">
-        <button class="btn-restart" onclick="location.reload()">Start over</button>
-        <a id="dlLink" download="polamaker_layout.png">
-          <button class="btn-dl">↓ Download PNG</button>
-        </a>
+        <button class="btn-restart" onclick="location.reload()">← Start over</button>
+        <div class="btn-dl-wrap">
+          <div class="btn-dl-shadow"></div>
+          <a id="dlLink" download="polamaker_layout.png" class="btn-dl">
+            ↓ Download PNG
+          </a>
+        </div>
       </div>
     </div>
     <div class="result-body">
-      <img id="resultImg" alt="Your polaroid layout" />
+      <div class="result-frame">
+        <img id="resultImg" alt="Your polaroid layout" />
+      </div>
+      <div class="result-meta">
+        <span class="result-meta-item"><span class="result-meta-dot"></span>300 DPI · Print ready</span>
+        <span class="result-meta-item"><span class="result-meta-dot"></span><span id="metaSize">—</span></span>
+        <span class="result-meta-item"><span class="result-meta-dot"></span><span id="metaPhotos">—</span></span>
+      </div>
     </div>
   </div>
 
@@ -1400,9 +1496,8 @@
       p.classList.remove('active','prev');
     });
     // set correct classes
-    for (let i = 1; i < n; i++) {
-      const p = document.getElementById(`page-${i}`);
-      if (p) p.classList.add('prev');
+    for (let i = 0; i < n; i++) {
+      document.getElementById(`page-${i}`).classList.add('prev');
     }
     to.classList.add('active');
     cur = n;
@@ -1490,54 +1585,20 @@
     form.append('config', JSON.stringify(config));
     S.files.forEach(f => form.append('images', f));
     try {
-      // Wake up Railway if it's sleeping (fire-and-forget, ignore errors)
-      fetch(`${API_URL}/health`).catch(() => {});
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
-
-      let res;
-      try {
-        res = await fetch(`${API_URL}/generate`, { method:'POST', body:form, signal: controller.signal });
-      } finally {
-        clearTimeout(timeout);
-      }
-
-      if (!res.ok) {
-        let msg = `Server error (${res.status})`;
-        try { const e = await res.json(); msg = e.error || msg; } catch (_) {}
-        alert('Error: ' + msg);
-        goTo(5);
-        return;
-      }
-
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('image/')) {
-        let msg = 'Unexpected response from server.';
-        try { const e = await res.json(); msg = e.error || e.detail || msg; } catch (_) {}
-        alert('Error: ' + msg);
-        goTo(5);
-        return;
-      }
-
+      const res = await fetch(`${API_URL}/generate`, { method:'POST', body:form });
+      if (!res.ok) { const e = await res.json().catch(()=>({error:'Server error'})); alert('Error: '+e.error); goTo(5); return; }
       const blob = await res.blob();
-      if (!blob || blob.size === 0) {
-        alert('Error: Server returned an empty image. Please try again.');
-        goTo(5);
-        return;
-      }
-
       const url = URL.createObjectURL(blob);
       document.getElementById('resultImg').src = url;
       document.getElementById('dlLink').href = url;
+      // populate meta strip
+      const pl = { a4:'A4', letter:'Letter', custom:'Custom' };
+      const oo = { portrait:'Portrait', landscape:'Landscape' };
+      document.getElementById('metaSize').textContent = `${pl[S.paper] || S.paper} · ${oo[S.orient] || S.orient}`;
+      document.getElementById('metaPhotos').textContent = S.files.length > 0 ? `${S.files.length} photo${S.files.length > 1 ? 's' : ''}` : 'Placeholders';
       goTo(7);
     } catch(e) {
-      console.error('Generate error:', e);
-      if (e.name === 'AbortError') {
-        alert('The request timed out (90s). Your Railway server may be starting up — please try again in a moment.');
-      } else {
-        alert('Could not reach the server. It may be waking up — please wait a moment and try again.');
-      }
+      alert('Could not connect. Is Polamaker running on localhost:3000?');
       goTo(5);
     }
   }

@@ -1021,12 +1021,108 @@
     .page.active .extras-list { animation: fadeUp 0.4s 0.2s both; }
     .page.active .summary-grid { animation: fadeUp 0.45s 0.12s both; }
 
-    @media (max-width: 600px) {
-      .nav-strip, .page-content, .page-footer { padding-left: 24px; padding-right: 24px; }
+    @media (max-width: 640px) {
+
+      /* ── Layout shell ── */
+      .nav-strip { padding: 14px 20px; }
+      .page-content { padding: 24px 20px 16px; }
+      .page-footer { padding: 16px 20px 28px; }
+
+      /* ── Nav ── */
+      .nav-logo { font-size: 1.1rem; }
+
+      /* ── Step headings ── */
+      .step-eyebrow { font-size: 0.68rem; margin-bottom: 8px; }
+      .step-headline { font-size: clamp(2rem, 10vw, 2.8rem); margin-bottom: 8px; }
+      .step-desc { font-size: 0.88rem; margin-bottom: 20px; }
+
+      /* ── Choice cards — 2 per row on mobile ── */
+      .choice-row { gap: 8px; margin-bottom: 18px; }
+      .card {
+        min-width: calc(50% - 4px);
+        max-width: calc(50% - 4px);
+        padding: 16px 14px 13px;
+        gap: 10px;
+      }
+      .card-icon { height: 34px; }
+      .card-name { font-size: 1.1rem; }
+      .card-sub { font-size: 0.6rem; }
+
+      /* ── Orientation cards — stack vertically ── */
+      .orient-row { flex-direction: column; gap: 8px; margin-bottom: 18px; }
+      .orient-card { padding: 12px 16px; }
+
+      /* ── Sub divider ── */
+      .sub-divider { margin-bottom: 18px; }
+
+      /* ── Upload ── */
+      .upload-zone { padding: 28px 16px; margin-bottom: 12px; }
+      .upload-glyph { font-size: 1.8rem; }
+      .upload-title { font-size: 1rem; }
+      .photo-strip { gap: 6px; }
+      .photo-thumb { width: 60px; height: 60px; }
+
+      /* ── Extras ── */
+      .extras-list { gap: 10px; margin-bottom: 24px; }
+      .extra-row { padding: 12px 14px; }
+
+      /* ── Buttons ── */
+      .btn-continue {
+        flex: 1;
+        justify-content: center;
+        padding: 15px 20px;
+        font-size: 0.8rem;
+      }
+      .btn-back-footer { padding: 15px 16px; font-size: 0.72rem; }
+      .btn-generate {
+        flex: 1;
+        justify-content: center;
+        padding: 15px 20px;
+        font-size: 0.8rem;
+      }
+      .btn-skip { font-size: 0.65rem; }
+
+      /* ── Summary page ── */
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .sum-cell { padding: 16px 18px; }
+      .sum-val { font-size: 1.35rem; }
+
+      /* ── Custom size row ── */
+      .custom-row { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+
+      /* ── Spinner ── */
+      .spinner-text { font-size: 0.72rem; letter-spacing: 0.08em; text-align: center; padding: 0 20px; }
+      .spinner-track { width: 160px; }
+
+      /* ── Result page ── */
+      .result-topbar { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+      .result-badge { display: none; }
+      .result-actions { gap: 8px; }
+      .btn-restart { padding: 10px 14px; font-size: 0.65rem; }
+      .btn-dl { padding: 10px 18px; font-size: 0.78rem; }
+      .result-body { padding: 24px 16px; gap: 14px; }
+      .result-body img { max-height: calc(100vh - 200px); }
+      .result-meta { flex-wrap: wrap; gap: 10px; justify-content: center; }
+      .result-frame::after { transform: translate(4px, 4px); }
+
+      /* ── Cover page ── */
       .cover-page { grid-template-columns: 1fr; }
       .cover-right { display: none; }
-      .cover-left { padding: 40px 24px; }
-      .summary-grid { grid-template-columns: 1fr; }
+      .cover-left {
+        padding: 32px 20px 28px;
+        justify-content: flex-start;
+        overflow-y: auto;
+      }
+      .cover-eyebrow { font-size: 0.58rem; margin-bottom: 14px; }
+      .cover-h1 { font-size: clamp(3rem, 13vw, 4rem); margin-bottom: 14px; }
+      .cover-sub { font-size: 0.8rem; margin-bottom: 22px; line-height: 1.6; }
+      .cover-steps { margin-bottom: 24px; }
+      .cover-step { padding: 8px 0; gap: 10px; }
+      .cover-step-label { font-size: 0.72rem; }
+      .cover-step-desc { font-size: 0.58rem; }
+      .cover-stats { gap: 24px; margin-bottom: 28px; padding-top: 20px; }
+      .cover-stat-val { font-size: 1.7rem; }
+      .btn-start { padding: 16px 32px; font-size: 0.88rem; width: 100%; justify-content: center; }
     }
   </style>
 </head>

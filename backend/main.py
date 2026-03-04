@@ -92,8 +92,10 @@ def create_polaroid_layout(
 
     try:
         font = ImageFont.truetype("arial.ttf", 36)
+        font_small = ImageFont.truetype("arial.ttf", 22)
     except:
         font = ImageFont.load_default()
+        font_small = font
 
     images = images or []
 
@@ -106,9 +108,13 @@ def create_polaroid_layout(
             x1 = x0 + pol_w
             y1 = y0 + pol_h
 
-            # White polaroid frame with subtle shadow effect
-            draw.rectangle([x0 + 6, y0 + 6, x1 + 6, y1 + 6], fill="#e0e0e0")  # shadow
-            draw.rectangle([x0, y0, x1, y1], fill="white", outline="#d0d0d0", width=2)
+            # Polaroid frame — clean white card with precise border
+            draw.rectangle([x0, y0, x1, y1], fill="white")
+            # Outer border — fine 1px ink line
+            draw.rectangle([x0, y0, x1, y1], outline="#1a1a18", width=2)
+            # Inner border line — gives the frame depth and quality feel
+            inset = 5
+            draw.rectangle([x0 + inset, y0 + inset, x1 - inset, y1 - inset], outline="#e8e8e4", width=1)
 
             # Photo area bounds
             px0 = x0 + photo_x_offset
@@ -142,24 +148,26 @@ def create_polaroid_layout(
 
                 canvas.paste(img, (px0, py0))
             else:
-                # Placeholder — light gray with subtle grid
-                draw.rectangle([px0, py0, px1, py1], fill="#ebebeb")
-                draw.rectangle([px0, py0, px1, py1], outline="#d0d0d0", width=1)
-                # Draw a small mountain/photo placeholder icon
+                # Clean placeholder — linen texture feel
+                draw.rectangle([px0, py0, px1, py1], fill="#f0ede8")
+                # Subtle crosshair
                 mid_x = (px0 + px1) // 2
                 mid_y = (py0 + py1) // 2
-                icon_size = min(photo_w, photo_h) // 6
-                draw.ellipse(
-                    [mid_x - icon_size, mid_y - icon_size - icon_size // 2,
-                     mid_x, mid_y - icon_size // 2],
-                    outline="#bbb", width=3
-                )
-                draw.polygon(
-                    [(px0 + photo_w // 5, py1 - photo_h // 4),
-                     (mid_x - icon_size // 2, mid_y + icon_size // 2),
-                     (px1 - photo_w // 5, py1 - photo_h // 4)],
-                    outline="#bbb", fill="#e0e0e0"
-                )
+                line_len = min(photo_w, photo_h) // 8
+                draw.line([mid_x - line_len, mid_y, mid_x + line_len, mid_y], fill="#c8c4bc", width=2)
+                draw.line([mid_x, mid_y - line_len, mid_x, mid_y + line_len], fill="#c8c4bc", width=2)
+                draw.ellipse([mid_x - line_len//2, mid_y - line_len//2,
+                              mid_x + line_len//2, mid_y + line_len//2],
+                             outline="#c8c4bc", width=2)
+
+            # Thin border around photo area
+            draw.rectangle([px0 - 1, py0 - 1, px1 + 1, py1 + 1], outline="#e0ddd8", width=1)
+
+            # Caption area — small decorative line in footer
+            cap_y = py1 + (y1 - py1) // 2
+            line_w = pol_w // 4
+            line_x0 = x0 + (pol_w - line_w) // 2
+            draw.line([line_x0, cap_y, line_x0 + line_w, cap_y], fill="#d8d5d0", width=2)
 
             # Number label
             if add_numbers:
@@ -169,12 +177,21 @@ def create_polaroid_layout(
                 text_y = py1 + (y1 - py1 - 36) // 2
                 draw.text((text_x, text_y), label, fill="#aaa", font=font)
 
+    # Watermark — bottom right, very subtle
+    try:
+        wm_font = ImageFont.truetype("arial.ttf", 28)
+    except:
+        wm_font = font_small
+    wm_text = "polamaker.floresr.com"
+    wm_w = draw.textlength(wm_text, font=wm_font)
+    draw.text(
+        (canvas_w - wm_w - 40, canvas_h - 48),
+        wm_text,
+        fill="#c8c4bc",
+        font=wm_font
+    )
+
     return canvas
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
 
 
 @app.post("/generate")

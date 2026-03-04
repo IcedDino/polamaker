@@ -1025,15 +1025,30 @@
 
       /* ── Layout shell ── */
       .nav-strip { padding: 14px 20px; }
-      .page-content { padding: 24px 20px 16px; }
-      .page-footer { padding: 16px 20px 28px; }
+      .page-footer { padding: 16px 20px 36px; }
+
+      /* ── Step pages: let content + footer scroll together ── */
+      .page {
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .page-content {
+        padding: 24px 20px 8px;
+        overflow-y: visible;
+        flex: none;
+      }
+      .page-footer-wrap {
+        border-top: none;
+        flex-shrink: 0;
+      }
 
       /* ── Nav ── */
       .nav-logo { font-size: 1.1rem; }
 
       /* ── Step headings ── */
       .step-eyebrow { font-size: 0.68rem; margin-bottom: 8px; }
-      .step-headline { font-size: clamp(2rem, 10vw, 2.8rem); margin-bottom: 8px; }
+      .step-headline { font-size: clamp(2.2rem, 11vw, 3rem); margin-bottom: 8px; }
       .step-desc { font-size: 0.88rem; margin-bottom: 20px; }
 
       /* ── Choice cards — 2 per row on mobile ── */
@@ -1044,6 +1059,7 @@
         padding: 16px 14px 13px;
         gap: 10px;
       }
+      .card:hover { transform: none; box-shadow: none; }
       .card-icon { height: 34px; }
       .card-name { font-size: 1.1rem; }
       .card-sub { font-size: 0.6rem; }
@@ -1090,7 +1106,7 @@
       /* ── Custom size row ── */
       .custom-row { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
 
-      /* ── Spinner ── */
+      /* ── Spinner (stays centered, no footer) ── */
       .spinner-text { font-size: 0.72rem; letter-spacing: 0.08em; text-align: center; padding: 0 20px; }
       .spinner-track { width: 160px; }
 
@@ -1105,24 +1121,47 @@
       .result-meta { flex-wrap: wrap; gap: 10px; justify-content: center; }
       .result-frame::after { transform: translate(4px, 4px); }
 
-      /* ── Cover page ── */
-      .cover-page { grid-template-columns: 1fr; }
+      /* ── Cover page — full-screen, big, scroll if needed ── */
+      .cover-page {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+        height: 100%;
+      }
       .cover-right { display: none; }
       .cover-left {
-        padding: 32px 20px 28px;
+        padding: 44px 24px 48px;
         justify-content: flex-start;
-        overflow-y: auto;
+        overflow-y: visible;
+        min-height: 100%;
       }
-      .cover-eyebrow { font-size: 0.58rem; margin-bottom: 14px; }
-      .cover-h1 { font-size: clamp(3rem, 13vw, 4rem); margin-bottom: 14px; }
-      .cover-sub { font-size: 0.8rem; margin-bottom: 22px; line-height: 1.6; }
-      .cover-steps { margin-bottom: 24px; }
-      .cover-step { padding: 8px 0; gap: 10px; }
-      .cover-step-label { font-size: 0.72rem; }
-      .cover-step-desc { font-size: 0.58rem; }
-      .cover-stats { gap: 24px; margin-bottom: 28px; padding-top: 20px; }
-      .cover-stat-val { font-size: 1.7rem; }
-      .btn-start { padding: 16px 32px; font-size: 0.88rem; width: 100%; justify-content: center; }
+      .cover-eyebrow {
+        font-size: 0.65rem;
+        margin-bottom: 20px;
+        letter-spacing: 0.24em;
+      }
+      .cover-h1 {
+        font-size: clamp(4.2rem, 18vw, 5.5rem);
+        margin-bottom: 20px;
+        line-height: 0.9;
+      }
+      .cover-sub {
+        font-size: 0.95rem;
+        margin-bottom: 32px;
+        line-height: 1.7;
+        max-width: 100%;
+      }
+      .cover-steps { margin-bottom: 32px; }
+      .cover-step { padding: 11px 0; gap: 12px; }
+      .cover-step-label { font-size: 0.85rem; }
+      .cover-step-desc { font-size: 0.62rem; }
+      .cover-stats { gap: 28px; margin-bottom: 36px; padding-top: 24px; }
+      .cover-stat-val { font-size: 2rem; }
+      .btn-start {
+        padding: 18px 32px;
+        font-size: 0.95rem;
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>

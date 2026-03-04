@@ -631,38 +631,26 @@
     }
     .btn-restart:hover { border-color: var(--ink); color: var(--ink); }
 
-    .btn-dl-wrap {
-      position: relative;
-      display: inline-flex;
-    }
+    .btn-dl-wrap { display: inline-flex; }
     .btn-dl {
-      font-family: 'Playfair Display', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      font-style: italic;
-      background: var(--ink);
-      color: var(--white);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--yellow);
+      color: var(--ink);
       border: none;
-      padding: 11px 24px;
+      padding: 11px 28px;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       transition: background 0.2s, transform 0.15s;
-      position: relative;
-      z-index: 1;
     }
-    .btn-dl:hover { background: #222; transform: translate(-2px, -2px); }
-    .btn-dl-shadow {
-      position: absolute;
-      inset: 0;
-      background: var(--yellow);
-      transform: translate(4px, 4px);
-      z-index: 0;
-      transition: transform 0.15s;
-    }
-    .btn-dl-wrap:hover .btn-dl-shadow { transform: translate(6px, 6px); }
+    .btn-dl::after { content: '↓'; font-size: 1.1rem; }
+    .btn-dl:hover { background: var(--yellow-dark); transform: translateY(-2px); }
+    .btn-dl:active { transform: translateY(0); }
 
     .result-body {
       flex: 1;
@@ -1457,9 +1445,8 @@
       <div class="result-actions">
         <button class="btn-restart" onclick="location.reload()">← Start over</button>
         <div class="btn-dl-wrap">
-          <div class="btn-dl-shadow"></div>
           <a id="dlLink" download="polamaker_layout.png" class="btn-dl">
-            ↓ Download PNG
+            Download PNG
           </a>
         </div>
       </div>

@@ -49,6 +49,27 @@
     .page.prev { transform: translateX(-100%); }
     .page.active { transform: translateX(0); }
 
+    /* ══ MOBILE: body-scroll mode ══
+       Pages are taken out of the absolute pager flow.
+       Only the active page is shown; body scrolls freely
+       so Safari can collapse its address bar. */
+    @media (max-width: 640px) {
+      html { height: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      body { height: auto; overflow: visible; }
+
+      #pager { height: auto; overflow: visible; position: static; }
+
+      .page {
+        position: static;
+        transform: none !important;
+        transition: none;
+        display: none;
+        min-height: 100svh;
+      }
+      .page.active { display: flex; }
+      .page.prev { display: none; }
+    }
+
     /* ══ PROGRESS BAR (top) ══ */
     .progress-bar {
       height: 4px;
@@ -1048,43 +1069,19 @@
 
     @media (max-width: 640px) {
 
-      /* ── Safari iOS: let the active page be the scroll container ── */
-      html, body { height: 100%; overflow: hidden; }
-
-      #pager {
-        height: 100%;
-        /* Use svh so pager always matches the smallest viewport
-           (toolbar expanded). This prevents content jumping when
-           Safari collapses its toolbar. */
-        height: 100svh;
-      }
-
-      .page {
-        /* On mobile each page scrolls itself.
-           -webkit-overflow-scrolling:touch enables momentum scroll
-           AND tells Safari this is a native scroll container,
-           which allows the toolbar to shrink as the user scrolls. */
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-y: none;
-        flex-direction: column;
-      }
-
-      /* ── Sticky nav with blur ── */
+      /* ── Nav: sticky with frosted glass blur ── */
       .nav-strip {
         padding: 14px 20px;
         position: sticky;
         top: 0;
         z-index: 10;
-        /* Frosted glass — content blurs under the nav as you scroll */
-        background: rgba(255, 255, 255, 0.82);
+        background: rgba(255, 255, 255, 0.85);
         -webkit-backdrop-filter: saturate(180%) blur(16px);
         backdrop-filter: saturate(180%) blur(16px);
         border-bottom: 1px solid rgba(226, 226, 220, 0.7);
       }
 
-      /* ── Page content flows naturally (no internal scroll) ── */
+      /* ── Page content flows naturally ── */
       .page-content {
         padding: 28px 20px 8px;
         overflow-y: visible;
@@ -1171,7 +1168,7 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        background: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.85);
         -webkit-backdrop-filter: saturate(180%) blur(16px);
         backdrop-filter: saturate(180%) blur(16px);
         border-bottom: 1px solid rgba(226,226,220,0.7);
@@ -1184,9 +1181,10 @@
         padding: 24px 16px;
         padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
         gap: 14px;
-        /* Let the page scroll, not this div */
         flex: none;
         overflow-y: visible;
+        align-items: center;
+        justify-content: flex-start;
       }
       .result-body img { max-width: 100%; max-height: none; }
       .result-meta { flex-wrap: wrap; gap: 10px; justify-content: center; }
@@ -1704,11 +1702,14 @@
       p.classList.remove('active','prev');
     });
     // set correct classes
-    for (let i = 0; i < n; i++) {
-      document.getElementById(`page-${i}`).classList.add('prev');
+    for (let i = 1; i < n; i++) {
+      const p = document.getElementById(`page-${i}`);
+      if (p) p.classList.add('prev');
     }
     to.classList.add('active');
     cur = n;
+    // On mobile, body is the scroll container — scroll to top on page change
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   function advance(step) {

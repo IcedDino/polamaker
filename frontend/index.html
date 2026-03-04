@@ -1694,21 +1694,19 @@
     const from = document.getElementById(`page-${cur}`);
     const to = document.getElementById(`page-${n}`);
     if (!to) return;
-    from.classList.remove('active');
-    from.classList.add(n > cur ? 'prev' : '');
-    if (n < cur) from.classList.remove('prev');
-    // all pages reset
-    document.querySelectorAll('.page').forEach(p => {
-      p.classList.remove('active','prev');
-    });
-    // set correct classes
-    for (let i = 1; i < n; i++) {
+
+    // reset all pages
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active', 'prev'));
+
+    // on desktop, mark pages before n as prev for slide animation
+    for (let i = 0; i <= 7; i++) {
       const p = document.getElementById(`page-${i}`);
-      if (p) p.classList.add('prev');
+      if (!p) continue;
+      if (i < n) p.classList.add('prev');
     }
+
     to.classList.add('active');
     cur = n;
-    // On mobile, body is the scroll container — scroll to top on page change
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
